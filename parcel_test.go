@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -34,10 +33,6 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -55,9 +50,7 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	stored, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, parcel.Client, stored.Client)
-	assert.Equal(t, parcel.Status, stored.Status)
-	assert.Equal(t, parcel.Address, stored.Address)
+	assert.Equal(t, parcel, stored)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -74,10 +67,6 @@ func TestAddGetDelete(t *testing.T) {
 func TestSetAddress(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -106,10 +95,6 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -136,10 +121,6 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	defer db.Close()
 
 	store := NewParcelStore(db)
@@ -173,17 +154,14 @@ func TestGetByClient(t *testing.T) {
 	// get by client
 	storedParcels, err := store.GetByClient(client) // получите список посылок по идентификатору клиента, сохранённого в переменной client
 	require.NoError(t, err)                         // убедитесь в отсутствии ошибки
-	require.Len(t, storedParcels, len(parcels))     // убедитесь, что количество полученных посылок совпадает с количеством добавленных
+	assert.Len(t, storedParcels, len(parcels))      // убедитесь, что количество полученных посылок совпадает с количеством добавленных
 
 	// check
 	for _, parcel := range storedParcels {
 		want, ok := parcelMap[parcel.Number]
-		require.True(t, ok, "unexpected parcel id %d", parcel.Number)
+		assert.True(t, ok, "unexpected parcel id %d", parcel.Number)
 
-		assert.Equal(t, want.Client, parcel.Client)
-		assert.Equal(t, want.Status, parcel.Status)
-		assert.Equal(t, want.Address, parcel.Address)
-		assert.Equal(t, want.CreatedAt, parcel.CreatedAt)
+		assert.Equal(t, want, parcel)
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
